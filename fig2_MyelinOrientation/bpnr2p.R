@@ -15,10 +15,10 @@ library(MASS)
 
 
 # prepare the function to run the fit in chunks
-bpnr_func <- function(sample, seed, its, b){
+bpnr_func <- function(sample, its, b){
   fit <- bpnr(pred.I = domDir ~ side + layer,
               data = sample,
-              its = its, burn = b, seed = seed)
+              its = its, burn = b)
   Intercept <- NISTradianTOdeg(fit$circ.coef.means)[1,]
   sider <- NISTradianTOdeg(fit$circ.coef.means)[2,]
   layerL4 <- NISTradianTOdeg(fit$circ.coef.means)[3,]
@@ -40,7 +40,7 @@ bpnr_func <- function(sample, seed, its, b){
 }
 
 
-loop_over_sampleID <- function(d, n, path, seed, its, b){
+loop_over_sampleID <- function(d, n, path, its, b){
   sample.Intercept <- matrix(0, nrow = Nsim,ncol=5)
   sample.sider <- matrix(0, nrow = Nsim,ncol=5)
   sample.layerL4 <- matrix(0, nrow = Nsim,ncol=5)
@@ -63,7 +63,7 @@ loop_over_sampleID <- function(d, n, path, seed, its, b){
     sample <- d %>%
       group_by(sampleID, side, layer) %>%
       slice_sample(n = n)
-    out <- bpnr_func(sample, seed, its, b)
+    out <- bpnr_func(sample, its, b)
     sample.Intercept[i,] <- out[1][[1]]
     sample.sider[i,] <- out[2][[1]]
     sample.layerL4[i,] <- out[3][[1]]
@@ -124,7 +124,6 @@ set.seed(2024) # for reproducibility
 Nsim = 25
 its = 10000
 b = 1000
-seed = 2024
 
 for (id in ids) {
   path = paste0("...", paste(id))
@@ -138,5 +137,5 @@ for (id in ids) {
   min_max_rows <- min(max_rows$max_rows)
   n <- as.integer(min_max_rows*0.05)
   
-  loop_over_sampleID(d, n, path, seed, its, b)
+  loop_over_sampleID(d, n, path, its, b)
 }

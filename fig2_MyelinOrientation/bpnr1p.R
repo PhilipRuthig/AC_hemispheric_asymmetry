@@ -14,7 +14,7 @@ library(RcppArmadillo)
 library(MASS)
 
 # prepare data
-dominant_directions_fused <- read.table("", quote="\"", comment.char="")
+dominant_directions_fused <- read.table("/path/to/dominant_directions_fused.txt", quote="\"", comment.char="")
 colnames(dominant_directions_fused)<-c("sampleID", "side", "layer", "z","y","x", "domDir")
 data <- dominant_directions_fused[!(dominant_directions_fused$layer==0 |
                                       dominant_directions_fused$layer==4|
@@ -25,10 +25,10 @@ rm(dominant_directions_fused)
 data$domDir <- NISTdegTOradian(data$domDir)
 
 # prepare the function to run the fit in chunks
-bpnr_func <- function(sample, seed, its, b){
+bpnr_func <- function(sample, its, b){
   fit <- bpnr(pred.I = domDir ~ side,
               data = sample,
-              its = its, burn = b, seed = seed)
+              its = its, burn = b)
   Intercept <- NISTradianTOdeg(fit$circ.coef.means)[1,]
   sider <- NISTradianTOdeg(fit$circ.coef.means)[2,]
   beta1_1 <- fit$beta1[,1] # Intercept
@@ -40,18 +40,17 @@ bpnr_func <- function(sample, seed, its, b){
 }
 
 set.seed(2024)
-num_simulations <- 25
-num_iterations <- 10000
-burn_in <- 1000
-random_seed <- 2024
+Nsim = 25
+its = 10000
+b = 1000
 
-intercept_samples <- matrix(0, nrow = num_simulations, ncol = 5)
-side_right_samples <- matrix(0, nrow = num_simulations, ncol = 5)
-beta1_1_samples <- matrix(0, nrow = num_simulations, ncol = num_iterations)
-beta1_2_samples <- matrix(0, nrow = num_simulations, ncol = num_iterations)
-beta2_1_samples <- matrix(0, nrow = num_simulations, ncol = num_iterations)
-beta2_2_samples <- matrix(0, nrow = num_simulations, ncol = num_iterations)
-model_fit_samples <- matrix(0, nrow = num_simulations, ncol = 5)
+sample.Intercept <- matrix(0, nrow = Nsim,ncol=5)
+sample.sider <- matrix(0, nrow = Nsim,ncol=5)
+sample.beta1_1 <- matrix(0, nrow = Nsim,ncol=its)
+sample.beta1_2 <- matrix(0, nrow = Nsim,ncol=its)
+sample.beta2_1 <- matrix(0, nrow = Nsim,ncol=its)
+sample.beta2_2 <- matrix(0, nrow = Nsim,ncol=its)
+sample.fit <- matrix(0, nrow = Nsim,ncol=5)
 
 max_rows <- data %>%
   group_by(sampleID, side, layer) %>%
@@ -60,10 +59,11 @@ min_max_rows <- min(max_rows$max_rows)
 n <- as.integer(min_max_rows*0.1)
 
 for (i in 1:Nsim){
+  print(paste("Iteration:", i))
   sample <- data %>%
     group_by(sampleID, side, layer) %>%
     slice_sample(n = n)
-  out <- bpnr_func(sample, seed, its, b)
+  out <- bpnr_func(sample, its, b)
   sample.Intercept[i,] <- out[1][[1]]
   sample.sider[i,] <- out[2][[1]]
   sample.beta1_1[i,] <- out[3][[1]]
