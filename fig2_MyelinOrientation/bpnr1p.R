@@ -40,18 +40,18 @@ bpnr_func <- function(sample, seed, its, b){
 }
 
 set.seed(2024)
-Nsim = 25
-its = 10000
-b = 1000
-seed = 2024
+num_simulations <- 25
+num_iterations <- 10000
+burn_in <- 1000
+random_seed <- 2024
 
-sample.Intercept <- matrix(0, nrow = Nsim,ncol=5)
-sample.sider <- matrix(0, nrow = Nsim,ncol=5)
-sample.beta1_1 <- matrix(0, nrow = Nsim,ncol=its)
-sample.beta1_2 <- matrix(0, nrow = Nsim,ncol=its)
-sample.beta2_1 <- matrix(0, nrow = Nsim,ncol=its)
-sample.beta2_2 <- matrix(0, nrow = Nsim,ncol=its)
-sample.fit <- matrix(0, nrow = Nsim,ncol=5)
+intercept_samples <- matrix(0, nrow = num_simulations, ncol = 5)
+side_right_samples <- matrix(0, nrow = num_simulations, ncol = 5)
+beta1_1_samples <- matrix(0, nrow = num_simulations, ncol = num_iterations)
+beta1_2_samples <- matrix(0, nrow = num_simulations, ncol = num_iterations)
+beta2_1_samples <- matrix(0, nrow = num_simulations, ncol = num_iterations)
+beta2_2_samples <- matrix(0, nrow = num_simulations, ncol = num_iterations)
+model_fit_samples <- matrix(0, nrow = num_simulations, ncol = 5)
 
 max_rows <- data %>%
   group_by(sampleID, side, layer) %>%
